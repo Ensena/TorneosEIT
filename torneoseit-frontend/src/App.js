@@ -1,26 +1,51 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { Suspense } from 'react';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Redirect,
+} from 'react-router-dom';
 import './App.css';
+import { LoadingFallback } from './helpers';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+const HomeLayout = React.lazy(() => import('./layouts/home'));
+const TorneosLudicos = React.lazy(() => import('./layouts/torneos_ludicos'));
+const TorneosProgra = React.lazy(() => import('./layouts/torneos_progra'));
 
-export default App;
+const Home = React.lazy(() => import('./pages/home'));
+
+const Routes = React.lazy(() => import('./routes'));
+
+export default () => (
+  <div className="main-container">
+    <Router>
+      <Switch>
+        <Suspense fallback={<LoadingFallback />}>
+          <Route exact path="/">
+            <HomeLayout>
+              <Home />
+            </HomeLayout>
+          </Route>
+
+          <Route exact path="/programacion">
+            <Redirect to="/programacion/torneos" />
+          </Route>
+
+          <Route path="/programacion/:page">
+            <TorneosProgra>
+              <Routes />
+            </TorneosProgra>
+          </Route>
+
+          <Route exact path="/ludico">
+            <Redirect to="/ludico/torneos" />
+          </Route>
+
+          <Route path="/ludico/:page">
+            <TorneosLudicos>Lúdicos</TorneosLudicos>
+          </Route>
+        </Suspense>
+      </Switch>
+    </Router>
+  </div>
+);
