@@ -14,7 +14,15 @@ const TorneosProgra = React.lazy(() => import('./layouts/torneos_progra'));
 
 const Home = React.lazy(() => import('./pages/home'));
 
-const Routes = React.lazy(() => import('./routes'));
+const TorneosPrograRoutes = React.lazy(() =>
+  import('./routes').then((module) => ({ default: module.TorneosPrograRoutes }))
+);
+
+const TorneosLudicosRoutes = React.lazy(() =>
+  import('./routes').then((module) => ({
+    default: module.TorneosLudicosRoutes,
+  }))
+);
 
 export default () => (
   <div className="main-container">
@@ -33,7 +41,7 @@ export default () => (
 
           <Route path="/programacion/:page">
             <TorneosProgra>
-              <Routes />
+              <TorneosPrograRoutes />
             </TorneosProgra>
           </Route>
 
@@ -42,7 +50,9 @@ export default () => (
           </Route>
 
           <Route path="/ludico/:page">
-            <TorneosLudicos>Lúdicos</TorneosLudicos>
+            <TorneosLudicos>
+              <TorneosLudicosRoutes />
+            </TorneosLudicos>
           </Route>
         </Suspense>
       </Switch>

@@ -36,7 +36,7 @@ export default ({ children }) => {
           Volver al menu de selección
         </Button>
       </Col>
-      <Col>{children}</Col>
+      <Col className="right-side-container">{children}</Col>
     </Row>
   );
 };

@@ -15,7 +15,7 @@ const RankingProgra = React.lazy(() =>
   import('./pages/torneos_progra/ranking')
 );
 
-export default () => {
+export const TorneosPrograRoutes = () => {
   const path = '/programacion';
   return (
     <Router>
@@ -34,14 +34,31 @@ export default () => {
   );
 };
 
-// export const TorneosLudicosRoutes = () => (
-//   <Router>
-//     <Switch>
-//       <Suspense fallback={<LoadingFallback />}>
-//         <Route exact path="/">
-//           <div>Hola</div>
-//         </Route>
-//       </Suspense>
-//     </Switch>
-//   </Router>
-// );
+console.log('asdasdasd');
+
+const DisponiblesLudico = React.lazy(() =>
+  import('./pages/torneos_ludicos/displonibles')
+);
+
+const RankingLudico = React.lazy(() =>
+  import('./pages/torneos_ludicos/ranking')
+);
+
+export const TorneosLudicosRoutes = () => {
+  const path = '/ludico';
+  return (
+    <Router>
+      <Switch>
+        <Suspense fallback={<LoadingFallback />}>
+          <Route exact path={`${path}/torneos`}>
+            <DisponiblesLudico />
+          </Route>
+
+          <Route exact path={`${path}/ranking`}>
+            <RankingLudico />
+          </Route>
+        </Suspense>
+      </Switch>
+    </Router>
+  );
+};
