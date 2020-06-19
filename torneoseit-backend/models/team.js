@@ -13,5 +13,12 @@ module.exports = (sequelize, DataTypes) => {
     }
   });
 
+  team.associate = (models) => {
+    team.belongsToMany(models.contestant, {
+      through: 'contestant_teams',
+      as: 'members',
+    });
+  };
+
   return team;
 };

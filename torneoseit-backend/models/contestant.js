@@ -9,9 +9,5 @@ module.exports = (sequelize, DataTypes) => {
     }
   });
 
-  contestant.associate = (models) => {
-    contestant.hasMany(models.team);
-  };
-
   return contestant;
 };

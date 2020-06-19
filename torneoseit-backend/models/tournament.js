@@ -34,8 +34,12 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   tournament.associate = (models) => {
-    tournament.hasMany(models.team);
-    tournament.hasMany(models.question);
+    tournament.belongsToMany(models.team, {
+      through: 'tournament_teams'
+    });
+    tournament.belongsToMany(models.contestant, {
+      through: 'tournament_contestants'
+    });
   };
 
   return tournament;

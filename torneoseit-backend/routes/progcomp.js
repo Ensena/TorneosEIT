@@ -1,12 +1,48 @@
 var express = require('express');
 const models = require('../models');
-const tournament = require('../models/tournament');
 
 var router = express.Router();
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
   res.send('respond with a resource');
+});
+
+router.get('/:id', (req, res, next) =>{
+    const id = req.params.id;
+    if (id) {
+        models.tournament.findOne({
+            where: {
+                id: id
+            }
+        }).then( tournament => {
+            if (tournament) {
+                res.json({
+                  status: 1,
+                  statusCode: 'tournament/found',
+                  data: tournament.toJSON()
+                });
+              } else {
+                res.status(400).json({
+                  status: 0,
+                  statusCode: 'tournament/not-found',
+                  description: "Couldn't find the tournament"
+                });
+              }
+            }).catch(error => {
+              res.status(400).json({
+                status: 0,
+                statusCode: 'database/error',
+                description: error.toString()
+              });
+        });
+    } else {
+        res.status(400).json({
+            status: 0,
+            statusCode: 'tournament/wrong-parameter',
+            description: 'The parameters are wrong! :('
+        });
+    }
 });
 
 router.post('/create/tournament', (req, res, next) => {
@@ -25,7 +61,8 @@ router.post('/create/tournament', (req, res, next) => {
             end: endDate,
             type: type,
             prices: prices,
-            category: category
+            category: category,
+            questions: questions
         }).then(tournament => {
             if(tournament){
                 // TODO: create row in questions table and relation between them

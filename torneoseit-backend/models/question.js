@@ -27,5 +27,12 @@ module.exports = (sequelize, DataTypes) => {
    
   });
 
+  question.associate = (models) => {
+    question.belongsToMany(models.tournament, {
+      through: 'tournament_questions',
+      as: 'tournaments'
+    });
+  };
+
   return question;
 };
