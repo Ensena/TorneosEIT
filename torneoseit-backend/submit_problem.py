@@ -78,4 +78,4 @@ def submit_problem (user,pwd,id_problem,language,answer,kind ): #(str) usuario ,
 submit_problem(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6])
 driver.close()
 #print(submit_problem(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6]))
-#eit0 torneoseit 10905 3 0hola.py 0
+#eit0 torneoseit 10905 3 0 hola.py 0
