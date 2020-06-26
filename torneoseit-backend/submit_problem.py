@@ -46,7 +46,7 @@ def submit_answer(id_problem,language,answer,kind): # all string less answer, it
 			input_field = driver.find_element_by_xpath('.//input[@name="codeupl"]')
 			
 
-			input_field.send_keys( 'C:/Users/Nicolas Flores/Desktop/hola.py') #cuando le paso answear no pasa la direccion del archivo
+			input_field.send_keys(answer) #cuando le paso answear no pasa la direccion del archivo
 			
 		elif kind == '1': # string 
 			input_field = driver.find_element_by_xpath('.//textarea[@name="code"]') #revisar esto
