@@ -1,12 +1,20 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 import re
 import time
 import sys
 
+#se puede mejorar el codigo analisando las respuestas que envia la pagina, de momento es solo un scrapper.
+
+chromedriver_path = 'C:/Users/Nicolas Flores/Desktop/chromedriver.exe'
+
+chrome_options = Options()  
+chrome_options.add_argument("--headless")  #Silent mode
+#chrome_path = '/usr/bin/google-chrome'
 
 
-driver = webdriver.Chrome("C:/Users/Nicolas Flores/Desktop/chromedriver.exe")#path of the browser
-
+driver = webdriver.Chrome(executable_path=chromedriver_path,
+chrome_options=chrome_options)#path of the browser
 
 def login_in(user,pwd): # 2 string
 	
@@ -78,4 +86,4 @@ def submit_problem (user,pwd,id_problem,language,answer,kind ): #(str) usuario ,
 submit_problem(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6])
 driver.close()
 #print(submit_problem(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6]))
-#eit0 torneoseit 10905 3 0 hola.py 0
+#eit0 torneoseit 10905 3 hola.py 0
