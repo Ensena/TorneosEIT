@@ -1,5 +1,19 @@
 var express = require('express');
 const models = require('../models');
+const multer = require('multer');
+
+// SET STORAGE
+var storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, '../uploads')
+    },
+    filename: function (req, file, cb) {
+      cb(null, file.fieldname + '-' + Date.now())
+    }
+  })
+   
+var upload = multer({ storage: storage })
+
 
 var router = express.Router();
 
@@ -97,6 +111,21 @@ router.post('/create/tournament', (req, res, next) => {
     questions.forEach( q => {
         console.log("Question",i++, q);
     });
+});
+
+router.post('/submit', upload.single('file'), (req, res, next) => {
+    const questionId = req.body['question_id'];
+    const lang = req.body['lang'];
+    const file = req.body['file'];
+    const code = req.body['code'];
+    // const submissionId
+
+    res.json({
+        status: 1,
+        statusCode: 'progcomp/create/tournament',
+        data: { qid: questionId, lang: lang, file: req.file, code: code}
+    });
+
 });
 
 module.exports = router;
