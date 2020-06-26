@@ -15,6 +15,14 @@ const RankingProgra = React.lazy(() =>
   import('./pages/torneos_progra/ranking')
 );
 
+const MisEnviosProgra = React.lazy(() =>
+  import('./pages/torneos_progra/mis_envios')
+);
+
+const MisEquiposProgra = React.lazy(() =>
+  import('./pages/torneos_progra/mis_equipos')
+);
+
 export const TorneosPrograRoutes = () => {
   const path = '/programacion';
   return (
@@ -27,6 +35,14 @@ export const TorneosPrograRoutes = () => {
 
           <Route exact path={`${path}/ranking`}>
             <RankingProgra />
+          </Route>
+
+          <Route exact path={`${path}/mis-envios`}>
+            <MisEnviosProgra />
+          </Route>
+
+          <Route exact path={`${path}/mis-equipos`}>
+            <MisEquiposProgra />
           </Route>
         </Suspense>
       </Switch>
