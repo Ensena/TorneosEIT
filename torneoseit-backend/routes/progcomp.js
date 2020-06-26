@@ -120,11 +120,7 @@ router.post('/submit', upload.single('file'), (req, res, next) => {
     const code = req.body['code'];
     // const submissionId
 
-    res.json({
-        status: 1,
-        statusCode: 'progcomp/create/tournament',
-        data: { qid: questionId, lang: lang, file: req.file, code: code}
-    });
+    
 
 });
 
