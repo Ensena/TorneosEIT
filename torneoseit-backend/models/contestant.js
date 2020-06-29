@@ -10,11 +10,17 @@ module.exports = (sequelize, DataTypes) => {
     name: {
       type: DataTypes.STRING,
       allowNull: false
+    },
+    power: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false
     }
   });
 
   contestant.associate = (models) => {
-    contestant.hasMany(models.submission);
+    contestant.hasMany(models.submission, {
+      foreignKey: 'contestant_rut'
+    });
   };
   return contestant;
 };

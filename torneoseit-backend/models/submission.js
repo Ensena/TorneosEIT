@@ -7,7 +7,7 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       allowNull: false
     },
-    status: {
+    status: { // 0: running, 1: Accepted, 2: WA, 3: TLE
         type: DataTypes.BIGINT,
         allowNull: false
     },
@@ -23,9 +23,9 @@ module.exports = (sequelize, DataTypes) => {
     }
   });
 
-  team.associate = (models) => {
-    team.belongsTo(models.question);
-  };
+  // team.associate = (models) => {
+  //   team.belongsTo(models.question);
+  // };
 
   return team;
 };
