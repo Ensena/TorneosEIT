@@ -176,68 +176,87 @@ router.post('/submit', upload.single('file'), (req, res, next) => {
 
   scriptPath = "/Users/Thomas/Documents/Universidad/11vo Semestre/TorneosEIT/torneoseit-backend/submit_problem.py"
 
-  const pythonProcess = spawn('python3',[scriptPath, 'eit0', 'torneoseit', questionId, lang, req.file.path, 0]);
+  models.question.findOne({
+    where: {
+      id: questionId
+    }
+  }).then( question => {
+    if(question){
+      const pythonProcess = spawn('python3',[scriptPath, 'eit0', 'torneoseit', question.judgeid, lang, req.file.path, 0]);
 
-  pythonProcess.stdout.on('data', (data) => {
-    console.log(data.toString());
-    var parsedData = data.toString();
-    var separatedData = parsedData.split(",");
-    submissionId = separatedData[0].trim();
-    submissionStatus = separatedData[1];
-  });
-
-
-  pythonProcess.stderr.on('data', (data) => {
-    res.json({
-      status: 0,
-      statusCode: 'progcomp/submit/error',
-      description: "Received an error from the submission script",
-      error: data.toString()
-    });
-  });
-
-  pythonProcess.on('exit', (code) => {
-    console.log("Python process quit with code : " + code);
-    
-    if(code != 0){
-      res.json({
-        status: 0,
-        statusCode: 'progcomp/submit/error',
-        description: "Received an error from the submission script"
+      pythonProcess.stdout.on('data', (data) => {
+        console.log(data.toString());
+        var parsedData = data.toString();
+        var separatedData = parsedData.split(",");
+        submissionId = separatedData[0].trim();
+        submissionStatus = separatedData[1];
       });
-    } else {
-      models.submission.create({
-        id: submissionId,
-        status: submissionStatus,
-        languaje: lang,
-        code: code,
-        file: req.file.path,
-        contestant: contestantRut,
-        question: questionId
-      }).then( submission => {
-        if(submission){
+
+
+      pythonProcess.stderr.on('data', (data) => {
+        res.json({
+          status: 0,
+          statusCode: 'progcomp/submit/error',
+          description: "Received an error from the submission script",
+          error: data.toString()
+        });
+      });
+
+      pythonProcess.on('exit', (code) => {
+        console.log("Python process quit with code : " + code);
+        
+        if(code != 0){
           res.json({
-            status: 1,
-            statusCode: 'progcomp/submit',
-            data: {submissionId, submissionStatus}
+            status: 0,
+            statusCode: 'progcomp/submit/error',
+            description: "Received an error from the submission script"
           });
         } else {
-          res.status(400).json({
-            status: 0,
-            statusCode: 'progcomp/submit',
-            description: "Couldn't create submission"
+          models.submission.create({
+            id: submissionId,
+            status: submissionStatus,
+            languaje: lang,
+            code: code,
+            file: req.file.path,
+            contestant: contestantRut,
+            question: questionId
+          }).then( submission => {
+            if(submission){
+              res.json({
+                status: 1,
+                statusCode: 'progcomp/submit',
+                data: {submissionId, submissionStatus}
+              });
+            } else {
+              res.status(400).json({
+                status: 0,
+                statusCode: 'progcomp/submit',
+                description: "Couldn't create submission"
+              });
+            }
+          }).catch(err => {
+            res.status(400).json({
+              status: 0,
+              statusCode: 'database/error',
+              description: error.toString()
+            });
           });
         }
-      }).catch(err => {
-        res.status(400).json({
-          status: 0,
-          statusCode: 'database/error',
-          description: error.toString()
-        });
-      })
+      });
+    } else {
+      res.status(400).json({
+        status: 0,
+        statusCode: 'progcomp/submit',
+        description: "Question does not exist"
+      });
     }
+  }).catch(err => {
+    res.status(400).json({
+      status: 0,
+      statusCode: 'database/error',
+      description: error.toString()
+    });
   });
-
 });
 
 module.exports = router;
