@@ -81,7 +81,12 @@ router.get('/ranking/personal/:id', (req, res, next) => {
             createdAt: {[Sequelize.Op.gte]: tournamentJSON.createdAt}
           }
         });
-       
+
+        //SELECT contestant_rut, count(*), T.sum FROM submissions, 
+        //   (SELECT contestant_rut, sum(CASE WHEN status = 1 THEN (EXTRACT(epoch from (submissions.createdAt - '${tournamentJSON.createdAt.toISOString()}')/60)) ELSE 30 END) 
+      //  FROM submissions where status != 0 GROUP BY contestant_rut) as T
+        //  where status = 1 and submissions.contestant_rut = T.contestant_rut GROUP BY contestant_rut ORDER BY count(*), T.sum DESC
+
       } else {
 
       }
