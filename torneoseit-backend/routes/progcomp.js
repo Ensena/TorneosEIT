@@ -1,6 +1,8 @@
 var express = require('express');
 const models = require('../models');
 const multer = require('multer');
+const { sequelize, Sequelize } = require('../models');
+const { Op } = Sequelize.Op;
 
 const spawn = require("child_process").spawn;
 
@@ -38,6 +40,55 @@ const createUserIfNotExist = (rut, name) => {
 router.get('/', function(req, res, next) {
   res.send('respond with a resource');
   
+});
+
+router.get('/ranking/personal/:id', (req, res, next) => {
+  const tournamentId = req.params.id;
+  if(tournamentId){
+    models.tournament.findOne({
+      where: {
+        id: tournamentId
+      },
+      include: ['questions']
+    }).then( tournament => {
+      const tournamentJSON = tournament.toJSON();
+      console.log(tournamentJSON);
+      if(tournamentJSON){
+        var questionIds = [];
+        console.log(tournamentJSON.questions);
+
+        for(let i=0; i < tournamentJSON.questions.length; i++){
+          questionIds.push(tournamentJSON.questions[i].id);
+        }
+
+        const countAccepted = await models.submission.findAll({
+          group: 'contestant_rut',
+          // order: sequelize.fn('count', 'id'),
+          attributes: ['contestant_rut', [sequelize.fn('count', sequelize.col('submission.id')), 'count']],
+          where: {
+            id: {[Sequelize.Op.in]: questionIds},
+            createdAt: {[Sequelize.Op.gte]: tournamentJSON.createdAt},
+            status: {[Sequelize.Op.eq]: 1}
+          }
+        });
+          
+        const sumMinutes = await models.submission.findAll({
+          group: 'contestant_rut',
+          // order: sequelize.fn('count', 'id'),
+          attributes: ['contestant_rut', [models.sequelize.literal(`sum(CASE WHEN status = 1 THEN (EXTRACT(epoch from ("submission"."createdAt" - '${tournamentJSON.createdAt.toISOString()}')/60)) ELSE 30 END)`), 'minutes']],
+          where: {
+            id: {[Sequelize.Op.in]: questionIds},
+            createdAt: {[Sequelize.Op.gte]: tournamentJSON.createdAt}
+          }
+        });
+       
+      } else {
+
+      }
+    })
+  } else {
+
+  }
 });
 
 router.get('/:id', (req, res, next) =>{
@@ -88,7 +139,7 @@ router.post('/create/tournament', upload.array('files'), (req, res, next) => {
     const questions = req.body['questions'];
     
     console.log(req.files)
-
+    // TODO: check if the user is a teacher
     if( name && startDate && endDate && category && questions){
         models.tournament.create({
             name: name,
