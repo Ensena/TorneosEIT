@@ -12,7 +12,7 @@ router.post('/create', (req, res, next) => {
   const rut = req.body['rut'];
   const power = req.body['power'];
 
-  if(name && rut && power != Null){
+  if(name && rut && power !== null){
     models.contestant.create({
       name: name,
       rut: rut,

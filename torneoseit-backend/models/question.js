@@ -40,9 +40,9 @@ module.exports = (sequelize, DataTypes) => {
       through: 'tournament_questions',
       as: 'tournaments'
     });
-    question.hasMany(models.submission, {
-      foreignKey: 'question_id'
-    })
+    // question.hasMany(models.submission, {
+    //   foreignKey: 'question_id'
+    // })
   };
 
   return question;

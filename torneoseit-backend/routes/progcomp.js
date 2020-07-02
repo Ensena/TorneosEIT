@@ -36,13 +36,12 @@ const createUserIfNotExist = (rut, name) => {
   });
 }
 
-/* GET users listing. */
 router.get('/', function(req, res, next) {
   res.send('respond with a resource');
   
 });
 
-router.get('/ranking/personal/:id', (req, res, next) => {
+router.get('/ranking/personal/:id', (req, res) => {
   const tournamentId = req.params.id;
   if(tournamentId){
     models.tournament.findOne({
@@ -50,7 +49,7 @@ router.get('/ranking/personal/:id', (req, res, next) => {
         id: tournamentId
       },
       include: ['questions']
-    }).then( tournament => {
+    }).then( async(tournament) => {
       const tournamentJSON = tournament.toJSON();
       console.log(tournamentJSON);
       if(tournamentJSON){
@@ -143,9 +142,8 @@ router.post('/create/tournament', upload.array('files'), (req, res, next) => {
     const type = req.body['type'];
     const questions = req.body['questions'];
     
-    console.log(req.files)
     // TODO: check if the user is a teacher
-    if( name && startDate && endDate && category && questions){
+    if( name && startDate && endDate && category && questions && req.files.length >= 1){
         models.tournament.create({
             name: name,
             start: startDate,
@@ -222,97 +220,106 @@ router.post('/create/tournament', upload.array('files'), (req, res, next) => {
 router.post('/submit', upload.single('file'), (req, res, next) => {
   const questionId = req.body['question_id'];
   const lang = req.body['lang'];
-  const file = req.body['file'];
+  const file = req.file;
   const code = req.body['code'];
   const contestantRut = req.body['contestant_rut'];
+  const teamId = req.body['team_id'];
   var submissionId;
   var submissionStatus;
-  
-  // need to check if the body is fully filled with the data requested
 
   scriptPath = "/Users/Thomas/Documents/Universidad/11vo Semestre/TorneosEIT/torneoseit-backend/submit_problem.py"
 
-  models.question.findOne({
-    where: {
-      id: questionId
-    }
-  }).then( question => {
-    if(question){
-      const pythonProcess = spawn('python3',[scriptPath, 'eit0', 'torneoseit', question.judgeid, lang, req.file.path, 0]);
-
-      pythonProcess.stdout.on('data', (data) => {
-        console.log(data.toString());
-        var parsedData = data.toString();
-        var separatedData = parsedData.split(",");
-        submissionId = separatedData[0].trim();
-        submissionStatus = separatedData[1];
-      });
-
-
-      pythonProcess.stderr.on('data', (data) => {
-        res.json({
-          status: 0,
-          statusCode: 'progcomp/submit/error',
-          description: "Received an error from the submission script",
-          error: data.toString()
+  if (questionId && lang && (file || code) && (contestantRut || teamId)){
+    models.question.findOne({
+      where: {
+        id: questionId
+      }
+    }).then( question => {
+      if(question){
+        const pythonProcess = spawn('python3',[scriptPath, 'eit0', 'torneoseit', question.judgeid, lang, req.file.path, 0]);
+  
+        pythonProcess.stdout.on('data', (data) => {
+          console.log(data.toString());
+          var parsedData = data.toString();
+          var separatedData = parsedData.split(",");
+          submissionId = separatedData[0].trim();
+          submissionStatus = separatedData[1];
         });
-      });
-
-      pythonProcess.on('exit', (code) => {
-        console.log("Python process quit with code : " + code);
-        
-        if(code != 0){
-          res.json({
-            status: 0,
-            statusCode: 'progcomp/submit/error',
-            description: "Received an error from the submission script"
-          });
-        } else {
-          models.submission.create({
-            id: submissionId,
-            status: submissionStatus,
-            languaje: lang,
-            code: code,
-            file: req.file.path,
-            contestant: contestantRut,
-            question: questionId
-          }).then( submission => {
-            if(submission){
-              res.json({
-                status: 1,
-                statusCode: 'progcomp/submit',
-                data: {submissionId, submissionStatus}
-              });
-            } else {
+  
+  
+        // pythonProcess.stderr.on('data', (data) => {
+        //   res.json({
+        //     status: 0,
+        //     statusCode: 'progcomp/submit/error',
+        //     description: "Received an error from the submission script",
+        //     error: data.toString()
+        //   });
+        // });
+  
+        pythonProcess.on('exit', (code) => {
+          console.log("Python process quit with code : " + code);
+          
+          if(code != 0){
+            res.json({
+              status: 0,
+              statusCode: 'progcomp/submit/error',
+              description: "Received an error from the submission script"
+            });
+          } else {
+            models.submission.create({
+              id: submissionId,
+              status: submissionStatus,
+              languaje: lang,
+              code: code,
+              file: req.file.path,
+              contestantRut: contestantRut,
+              teamId: teamId,
+              questionId: questionId
+            }).then( submission => {
+              if(submission){
+                res.json({
+                  status: 1,
+                  statusCode: 'progcomp/submit',
+                  data: {submissionId, submissionStatus}
+                });
+              } else {
+                res.status(400).json({
+                  status: 0,
+                  statusCode: 'progcomp/submit',
+                  description: "Couldn't create submission"
+                });
+              }
+            }).catch(err => {
               res.status(400).json({
                 status: 0,
-                statusCode: 'progcomp/submit',
-                description: "Couldn't create submission"
+                statusCode: 'database/error',
+                description: error.toString()
               });
-            }
-          }).catch(err => {
-            res.status(400).json({
-              status: 0,
-              statusCode: 'database/error',
-              description: error.toString()
             });
-          });
-        }
-      });
-    } else {
+          }
+        });
+      } else {
+        res.status(400).json({
+          status: 0,
+          statusCode: 'progcomp/submit',
+          description: "Question does not exist"
+        });
+      }
+    }).catch(err => {
       res.status(400).json({
         status: 0,
-        statusCode: 'progcomp/submit',
-        description: "Question does not exist"
+        statusCode: 'database/error',
+        description: error.toString()
       });
-    }
-  }).catch(err => {
+    });
+  } else {
     res.status(400).json({
       status: 0,
-      statusCode: 'database/error',
-      description: error.toString()
+      statusCode: 'progcomp/submit',
+      description: 'The body is wrong! :('
     });
-  });
+  }
+  
 });
 
 

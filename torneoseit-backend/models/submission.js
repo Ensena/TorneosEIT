@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = (sequelize, DataTypes) => {
-  let team = sequelize.define('submission', {
+  let submission = sequelize.define('submission', {
     id: {
       type: DataTypes.BIGINT,
       primaryKey: true,
@@ -23,9 +23,11 @@ module.exports = (sequelize, DataTypes) => {
     }
   });
 
-  // team.associate = (models) => {
-  //   team.belongsTo(models.question);
-  // };
+  submission.associate = (models) => {
+    submission.belongsTo(models.question);
+    submission.belongsTo(models.team);
+    submission.belongsTo(models.contestant);
+  };
 
-  return team;
+  return submission;
 };

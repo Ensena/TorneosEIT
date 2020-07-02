@@ -3,7 +3,7 @@
 module.exports = (sequelize, DataTypes) => {
   let contestant = sequelize.define('contestant', {
     rut: {
-      type: DataTypes.STRING,
+      type: DataTypes.BIGINT,
       allowNull: false,
       primaryKey: true
     },
@@ -17,10 +17,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   });
 
-  contestant.associate = (models) => {
-    contestant.hasMany(models.submission, {
-      foreignKey: 'contestant_rut'
-    });
-  };
+  // contestant.associate = (models) => {
+  //   contestant.hasMany(models.submission, {
+  //     foreignKey: 'contestant_rut'
+  //   });
+  // };
   return contestant;
 };

@@ -106,10 +106,10 @@ router.post('/', (req, res, next) => {
                 } else {
                     models.team.create({
                         name: name,
+                        ownerid: member
                     }).then( team => {
                         if(team){
                             team.addMembers(member);
-    
                             res.json({
                                 status: 1,
                                 statusCode: 'team/',

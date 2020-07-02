@@ -6,9 +6,14 @@ import json
 import time
 import sys
 
-#se puede mejorar el codigo analisando las respuestas que envia la pagina, de momento es solo un scrapper.
+# lang: 1: C
+# 		2: JAVA
+# 		3: C++
+# 		4: PASCAL
+# 		5: C++11
+# 		6: Python 3.5.1
 
-chromedriver_path = "~/Users/Thomas/Downloads/chromedriver"
+#se puede mejorar el codigo analisando las respuestas que envia la pagina, de momento es solo un scrapper.
 
 chrome_options = Options()  
 chrome_options.add_argument("--headless")  #Silent mode
