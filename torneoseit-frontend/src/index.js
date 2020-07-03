@@ -6,19 +6,24 @@ import * as serviceWorker from './serviceWorker';
 import ensena from 'ensena'
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-// ensena.SetApp("API KEY")
-// ensena.SetWebUser().then(()=>{
-//   ReactDOM.render(
-//     <React.StrictMode>
-//       <App />
-//     </React.StrictMode>,
-//     document.getElementById('root')
-//   );
-// })
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
+ensena.SetApp("bymSQsg2Gm")
+ensena.SetWebUser().then(async ()=>{
+  console.log(ensena);
+  console.log(ensena.Ctx());
+  console.log(ensena.Ctx().User);
+  console.log(ensena.User());
+  
+  ReactDOM.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+    document.getElementById('root')
+  );
+})
+// ReactDOM.render(
+//   <React.StrictMode>
+//     <App />
+//   </React.StrictMode>,
+//   document.getElementById('root')
+// );
 serviceWorker.unregister();

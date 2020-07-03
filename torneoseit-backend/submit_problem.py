@@ -1,20 +1,24 @@
 from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 import re
+import json
 import time
 import sys
 
-#se puede mejorar el codigo analisando las respuestas que envia la pagina, de momento es solo un scrapper.
+# lang: 1: C
+# 		2: JAVA
+# 		3: C++
+# 		4: PASCAL
+# 		5: C++11
+# 		6: Python 3.5.1
 
-chromedriver_path = 'C:/Users/Nicolas Flores/Desktop/chromedriver.exe'
+#se puede mejorar el codigo analisando las respuestas que envia la pagina, de momento es solo un scrapper.
 
 chrome_options = Options()  
 chrome_options.add_argument("--headless")  #Silent mode
-#chrome_path = '/usr/bin/google-chrome'
 
-
-driver = webdriver.Chrome(executable_path=chromedriver_path,
-chrome_options=chrome_options)#path of the browser
+driver = webdriver.Chrome(ChromeDriverManager().install())#path of the browser,
 
 def login_in(user,pwd): # 2 string
 	
@@ -29,7 +33,7 @@ def login_in(user,pwd): # 2 string
 	login_buttom.click()
 	return True
 
-def submit_answer(id_problem,language,answer,kind): # all string less answer, it can be a text or a file- kind it is the type of the answer
+def submit_answer(id_problem, language, answer, kind): # all string less answer, it can be a text or a file- kind it is the type of the answer
 	driver.get('https://onlinejudge.org/index.php?option=com_onlinejudge&Itemid=25')
 
 	input_field = driver.find_element_by_xpath('.//input[@name="localid"]')
@@ -44,9 +48,7 @@ def submit_answer(id_problem,language,answer,kind): # all string less answer, it
 	try:
 		if kind == '0': #file
 			input_field = driver.find_element_by_xpath('.//input[@name="codeupl"]')
-			
-
-			input_field.send_keys(answer) #cuando le paso answear no pasa la direccion del archivo
+			input_field.send_keys(answer) #cuando le paso answer no pasa la direccion del archivo
 			
 		elif kind == '1': # string 
 			input_field = driver.find_element_by_xpath('.//textarea[@name="code"]') #revisar esto
@@ -77,13 +79,14 @@ def submit_answer(id_problem,language,answer,kind): # all string less answer, it
 		elif message_submit[len(message_submit)-2]=="e": #code
 			status=4
 	
-	return  id_submittion,status,message_submit
+	response = "%d,%d,%s"%(int(id_submittion), status, message_submit)
+	return response
 
-def submit_problem (user,pwd,id_problem,language,answer,kind ): #(str) usuario ,(str) pass, (str) id problema,(str {0-1}) lenguaje, (str {0-1}) tipo de respuesta,({str - file} ) respuesta
-	login_in(user,pwd)
-	return submit_answer(id_problem,language,answer,kind)
+def submit_problem (user, pwd, id_problem, language, answer, kind ): #(str) usuario ,(str) pass, (str) id problema,(str {0-1}) lenguaje, (str {0-1}) tipo de respuesta,({str - file} ) respuesta
+	login_in(user, pwd)
+	return submit_answer(id_problem, language, answer, kind)
 
-submit_problem(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6])
+print(submit_problem(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6]))
+
+sys.stdout.flush()
 driver.close()
-#print(submit_problem(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6]))
-#eit0 torneoseit 10905 3 hola.py 0
