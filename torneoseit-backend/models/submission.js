@@ -7,7 +7,7 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       allowNull: false
     },
-    status: { // 0: running, 1: Accepted, 2: WA, 3: TLE
+    status: { // 0: running, 1: Accepted, 2: WA, 3: TLE, 4: Compilation Error
         type: DataTypes.BIGINT,
         allowNull: false
     },
