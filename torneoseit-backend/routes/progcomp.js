@@ -126,12 +126,16 @@ router.get('/ranking/personal/:id', async (req, res) => {
   with startdate as ( select start from tournaments where id = ${tournamentId} ),
   questions as ( select "questionId" as question_id from tournament_questions where "tournamentId" = ${tournamentId} ),
   submissions2 as ( select * from submissions where "questionId" in (select question_id from questions) ),
-  ans as (
-    select s."contestantRut", count(*) as accepted,
-    sum(CASE WHEN s.status = 1 THEN (ROUND(EXTRACT(epoch from (startdate.start - s."createdAt")/60))) ELSE 30 END) as time
+  accepteds as (
+    select s."contestantRut", count(*) as accepted
     from submissions2 s, startdate
-    where s."contestantRut" is not null
-    group by s."contestantRut" order by accepted, time
+    where s."contestantRut" is not null and status = 1
+    group by s."contestantRut" order by accepted
+  ),
+  ans as (
+    select accepteds."contestantRut", accepteds.accepted, sum(CASE WHEN s.status = 1 THEN (ROUND(EXTRACT(epoch from (s."createdAt" - startdate.start)/60))) ELSE 30 END) as time
+    from submissions2 s, startdate, accepteds
+    group by accepteds."contestantRut", accepteds.accepted
   )
   select name, ans.* from contestants, ans where contestants.rut = ans."contestantRut";`, { type: QueryTypes.SELECT });
 
@@ -151,14 +155,16 @@ router.get('/ranking/team/:id', async (req, res) => {
     with startdate as ( select start from tournaments where id = ${tournamentId} ),
     questions as ( select "questionId" as question_id from tournament_questions where "tournamentId" = ${tournamentId} ),
     submissions2 as ( select * from submissions where "questionId" in (select question_id from questions) ),
-    ans as (
-        select s."teamId", count(*) as accepted,
-        sum(CASE WHEN s.status = 1 THEN (ROUND(EXTRACT(epoch from (startdate.start - s."createdAt")/60))) ELSE 30 END) as time
+    accepteds as (
+        select s."teamId", count(*) as accepted
         from submissions2 s, startdate
-        where s."teamId" is not null
-        group by s."teamId" order by accepted, time
-    )
-    select name, ans.* from teams, ans where teams.id = ans."teamId";`, { type: QueryTypes.SELECT });
+        where s."teamId" is not null and status = 1
+        group by s."teamId" order by accepted
+    ), ans as (
+      select accepteds."teamId", accepteds.accepted, sum(CASE WHEN s.status = 1 THEN (ROUND(EXTRACT(epoch from (s."createdAt" - startdate.start)/60))) ELSE 30 END) as time
+      from submissions2 s, startdate, accepteds
+      group by accepteds."teamId", accepteds.accepted
+  ) select name, ans.* from teams, ans where teams.id = ans."teamId";`, { type: QueryTypes.SELECT });
 
   res.json({
     status: 1,
