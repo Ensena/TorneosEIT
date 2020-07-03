@@ -22,32 +22,47 @@ var upload = multer({ storage: storage })
 
 var router = express.Router();
 
-const createUserIfNotExist = (rut, name) => {
-  models.contestant.findOne({
-    where: {
-        rut: rut
-    }
-  }).then( contestantExists =>{
-    if(!contestantExists){
-      models.contestant.create({
-          rut: rut,
-          name: name
-      }); //should get the errors
-    }
-  });
-}
-
-router.get('/submissions', (req, res, next) => {
-  const rut = req.body['rut'];
-  if(rut){
-    
-    models.submission.findAll({
-      where: {
-        
+router.get('/submissions/:rut', async (req, res, next) => {
+  const {rut} = req.params;
+  try {
+    console.log("rut:",rut)
+    const user = await models.contestant.findOne({
+      where: {rut},
+      include: {
+        model: models.team, as: "teams",
+        attributes: ['id'],
       }
-    })
-  } else {
+    });
 
+    
+    var teams = user.teams;
+    var teamIds = [];
+    for(let i = 0; i < teams.length; i++){
+      teamIds.push(teams[i].id);
+    }
+
+    const submissions = await models.submission.findAll({
+      where: {
+        [Sequelize.Op.or]:[
+          {teamId: {[Sequelize.Op.in]: teamIds}},
+          {contestantRut: rut}
+        ]
+      }
+    });
+    
+    res.json({
+      status: 1,
+      statusCode: 'submissions/found',
+      data: {submissions}
+    });
+  
+    
+  } catch(error) {
+    res.status(400).json({
+      status: 0,
+      statusCode: 'submissions/error-message',
+      error: error
+   });
   }
 });
 
