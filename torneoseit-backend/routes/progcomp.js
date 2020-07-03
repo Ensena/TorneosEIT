@@ -3,6 +3,7 @@ const models = require('../models');
 const multer = require('multer');
 const fetch = require('node-fetch');
 const { sequelize, Sequelize } = require('../models');
+const { QueryTypes } = require('sequelize');
 const { Op } = Sequelize.Op;
 
 const spawn = require("child_process").spawn;
@@ -10,7 +11,7 @@ const spawn = require("child_process").spawn;
 // SET STORAGE
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
-      cb(null, '/Users/Thomas/Documents/Universidad/11vo Semestre/TorneosEIT/torneoseit-backend/uploads')
+      cb(null, process.env.BACKEND_ROUTE +'/uploads')
     },
     filename: function (req, file, cb) {
       let ext = file.originalname.substring(file.originalname.lastIndexOf('.'), file.originalname.length);
@@ -118,58 +119,52 @@ router.get('/', function(req, res, next) {
   
 });
 
-router.get('/ranking/personal/:id', (req, res) => {
+router.get('/ranking/personal/:id', async (req, res) => {
   const tournamentId = req.params.id;
-  if(tournamentId){
-    models.tournament.findOne({
-      where: {
-        id: tournamentId
-      },
-      include: ['questions']
-    }).then( async(tournament) => {
-      const tournamentJSON = tournament.toJSON();
-      console.log(tournamentJSON);
-      if(tournamentJSON){
-        var questionIds = [];
-        console.log(tournamentJSON.questions);
 
-        for(let i=0; i < tournamentJSON.questions.length; i++){
-          questionIds.push(tournamentJSON.questions[i].id);
-        }
+  const people = await sequelize.query(`
+  with startdate as ( select start from tournaments where id = ${tournamentId} ),
+  questions as ( select "questionId" as question_id from tournament_questions where "tournamentId" = ${tournamentId} ),
+  submissions2 as ( select * from submissions where "questionId" in (select question_id from questions) ),
+  ans as (
+    select s."contestantRut", count(*) as accepted,
+    sum(CASE WHEN s.status = 1 THEN (ROUND(EXTRACT(epoch from (startdate.start - s."createdAt")/60))) ELSE 30 END) as time
+    from submissions2 s, startdate
+    where s."contestantRut" is not null
+    group by s."contestantRut" order by accepted, time
+  )
+  select name, ans.* from contestants, ans where contestants.rut = ans."contestantRut";`, { type: QueryTypes.SELECT });
 
-        const countAccepted = await models.submission.findAll({
-          group: 'contestant_rut',
-          // order: sequelize.fn('count', 'id'),
-          attributes: ['contestant_rut', [sequelize.fn('count', sequelize.col('submission.id')), 'count']],
-          where: {
-            id: {[Sequelize.Op.in]: questionIds},
-            createdAt: {[Sequelize.Op.gte]: tournamentJSON.createdAt},
-            status: {[Sequelize.Op.eq]: 1}
-          }
-        });
-          
-        const sumMinutes = await models.submission.findAll({
-          group: 'contestant_rut',
-          // order: sequelize.fn('count', 'id'),
-          attributes: ['contestant_rut', [models.sequelize.literal(`sum(CASE WHEN status = 1 THEN (EXTRACT(epoch from ("submission"."createdAt" - '${tournamentJSON.createdAt.toISOString()}')/60)) ELSE 30 END)`), 'minutes']],
-          where: {
-            id: {[Sequelize.Op.in]: questionIds},
-            createdAt: {[Sequelize.Op.gte]: tournamentJSON.createdAt}
-          }
-        });
+  console.log(people);
 
-        //SELECT contestant_rut, count(*), T.sum FROM submissions, 
-        //   (SELECT contestant_rut, sum(CASE WHEN status = 1 THEN (EXTRACT(epoch from (submissions.createdAt - '${tournamentJSON.createdAt.toISOString()}')/60)) ELSE 30 END) 
-      //  FROM submissions where status != 0 GROUP BY contestant_rut) as T
-        //  where status = 1 and submissions.contestant_rut = T.contestant_rut GROUP BY contestant_rut ORDER BY count(*), T.sum DESC
+  res.json({
+    status: 1,
+    statusCode: 'people/ranking',
+    data: people
+  });  
+});
 
-      } else {
+router.get('/ranking/team/:id', async (req, res) => {
+  const tournamentId = req.params.id;
 
-      }
-    })
-  } else {
+  const people = await sequelize.query(`
+    with startdate as ( select start from tournaments where id = ${tournamentId} ),
+    questions as ( select "questionId" as question_id from tournament_questions where "tournamentId" = ${tournamentId} ),
+    submissions2 as ( select * from submissions where "questionId" in (select question_id from questions) ),
+    ans as (
+        select s."teamId", count(*) as accepted,
+        sum(CASE WHEN s.status = 1 THEN (ROUND(EXTRACT(epoch from (startdate.start - s."createdAt")/60))) ELSE 30 END) as time
+        from submissions2 s, startdate
+        where s."teamId" is not null
+        group by s."teamId" order by accepted, time
+    )
+    select name, ans.* from teams, ans where teams.id = ans."teamId";`, { type: QueryTypes.SELECT });
 
-  }
+  res.json({
+    status: 1,
+    statusCode: 'people/ranking',
+    data: people
+  });  
 });
 
 router.get('/:id', (req, res, next) =>{
@@ -304,7 +299,7 @@ router.post('/submit', upload.single('file'), (req, res, next) => {
   var submissionId;
   var submissionStatus;
 
-  scriptPath = "/Users/Thomas/Documents/Universidad/11vo Semestre/TorneosEIT/torneoseit-backend/submit_problem.py"
+  scriptPath = process.env.BACKEND_ROUTE +"/submit_problem.py"
 
   if (questionId && lang && (file || code) && (contestantRut || teamId)){
     models.question.findOne({
@@ -399,5 +394,38 @@ router.post('/submit', upload.single('file'), (req, res, next) => {
   
 });
 
+router.post('/add-team-to-tournament', async (req, res, next) => {
+  const teamId = req.body.team_id;
+  const tournamentId = req.body.tournament_id;
+
+  let Tournament = await models.tournament.findOne({
+    where: {
+      id: tournamentId
+    }
+  });  
+
+  Tournament.addTeams(teamId);
+  res.json({
+    status: 1,
+    statusCode: 'tournament/added/team'
+  });
+});
+
+router.post('/add-contestant-to-tournament', async (req, res, next) => {
+  const contestantId = req.body.contestant_id;
+  const tournamentId = req.body.tournament_id;
+
+  let Tournament = await models.tournament.findOne({
+    where: {
+      id: tournamentId
+    }
+  });  
+
+  Tournament.addContestants(contestantId);
+  res.json({
+    status: 1,
+    statusCode: 'tournament/added/contestant'
+  });
+});
 
 module.exports = router;
