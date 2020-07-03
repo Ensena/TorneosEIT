@@ -23,15 +23,26 @@ module.exports = (sequelize, DataTypes) => {
     file: {
         type: DataTypes.STRING,
         allowNull: false
-    }
-   
-  });
+    } 
+  },
+  {
+    indexes: [
+      {
+        fields: ['judgeid', 'judge']
+      },
+    ]
+  }
+  );
+
 
   question.associate = (models) => {
     question.belongsToMany(models.tournament, {
       through: 'tournament_questions',
       as: 'tournaments'
     });
+    // question.hasMany(models.submission, {
+    //   foreignKey: 'question_id'
+    // })
   };
 
   return question;

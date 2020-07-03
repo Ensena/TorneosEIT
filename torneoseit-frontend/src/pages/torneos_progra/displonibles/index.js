@@ -7,7 +7,7 @@ const lorem = `Non sit aute pariatur cillum et duis culpa magna anim culpa. Amet
 Id aliqua elit Lorem nostrud qui ut dolore ipsum consectetur mollit excepteur veniam. Nostrud excepteur do laboris est aliquip ad est pariatur. Exercitation eu consequat excepteur duis mollit ad deserunt incididunt ipsum qui nostrud magna proident. Ex aliqua ea incididunt officia cupidatat nulla tempor occaecat quis. Adipisicing aliqua cillum nulla eiusmod consectetur anim sunt consectetur id nulla eiusmod sint excepteur ex.`;
 
 export default () => {
-  const data = new Array(10).fill(null).map((item, index) => ({
+  const data = new Array(5).fill(null).map((item, index) => ({
     id: index,
     name: `Torneo ${index + 1}`,
     descripcion: lorem,

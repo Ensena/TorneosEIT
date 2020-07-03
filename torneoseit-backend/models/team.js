@@ -10,7 +10,11 @@ module.exports = (sequelize, DataTypes) => {
     name: {
       type: DataTypes.STRING,
       allowNull: false,
-    }
+    },
+    ownerid: {
+      type: DataTypes.BIGINT,
+      allowNull: false
+    },
   });
 
   team.associate = (models) => {
@@ -18,6 +22,10 @@ module.exports = (sequelize, DataTypes) => {
       through: 'contestant_teams',
       as: 'members',
     });
+
+    // team.hasMany(models.submission, {
+    //   foreignKey: 'team_id'
+    // });
   };
 
   return team;

@@ -8,14 +8,23 @@ import ensena from 'ensena';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 ensena.SetApp('bymSQsg2Gm');
-ensena.SetWebUser().then(() => {
+ensena.SetWebUser().then(async () => {
+  console.log(ensena);
+  console.log(ensena.Ctx());
+  console.log(ensena.Ctx().User);
+  console.log(ensena.User());
+
   ReactDOM.render(
     <React.StrictMode>
-      <ConfigProvider>
-        <App />
-      </ConfigProvider>
+      <App />
     </React.StrictMode>,
     document.getElementById('root')
   );
-  serviceWorker.unregister();
 });
+// ReactDOM.render(
+//   <React.StrictMode>
+//     <App />
+//   </React.StrictMode>,
+//   document.getElementById('root')
+// );
+serviceWorker.unregister();
