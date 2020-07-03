@@ -129,6 +129,82 @@ router.put('/submissions/update', (req, res, next) => {
   
 });
 
+router.get('/submissions', (req, res, next) => {
+  const rut = req.body['rut'];
+  if(rut){
+    
+    models.submission.findAll({
+      where: {
+        
+      }
+    })
+  } else {
+
+  }
+});
+
+router.put('/submissions/update', (req, res, next) => {
+  var submissionId = parseInt(req.body['submission_id']);
+  if(submissionId){
+    urlSubmissionId = submissionId-1;
+    const URL = 'https://uhunt.onlinejudge.org/api/subs-user/1151134/' + urlSubmissionId;
+    console.log("El sub id: ",submissionId)
+    console.log(" URL: ", URL)
+    fetch(URL)
+    .then(res => res.json())
+    .then((data) => {
+      const match = data.subs.filter(inner => inner[0] === submissionId)[0];
+      console.log("match", match);
+      var status;
+      if(match[2] === 90){
+        status = 1;
+      } else if(match[2] === 50){
+        status = 3;
+      } else if(match[2] === 30){
+        status = 4;
+      } else if(match[2] === 20){
+        status = 0;
+      } else {
+        status = 2;
+      }
+      console.log("status", status);
+
+      models.submission.update({status: status}, {
+        where: {
+          id: submissionId
+        }
+      }).then(updated => {
+        if (updated) {
+          res.json({
+            status: 1,
+            statusCode: 'status/update-found',
+            data: {submissionId, status}
+          });
+        } else {
+          res.json({
+            status: 0,
+            statusCode: 'status/update-not-found',
+            description: 'submission id not found'
+          });
+        }
+      });
+    }).catch(error => {
+      res.status(400).json({
+        status: 0,
+        statusCode: 'database/error',
+        description: error.toString()
+      });
+    })
+  } else {
+    res.status(400).json({
+      status: 0,
+      statusCode: 'tournament/wrong-parameter',
+      description: 'The parameters are wrong! :('
+    });
+  }
+  
+});
+
 router.get('/', function(req, res, next) {
   res.send('respond with a resource');
   
@@ -141,12 +217,16 @@ router.get('/ranking/personal/:id', async (req, res) => {
   with startdate as ( select start from tournaments where id = ${tournamentId} ),
   questions as ( select "questionId" as question_id from tournament_questions where "tournamentId" = ${tournamentId} ),
   submissions2 as ( select * from submissions where "questionId" in (select question_id from questions) ),
-  ans as (
-    select s."contestantRut", count(*) as accepted,
-    sum(CASE WHEN s.status = 1 THEN (ROUND(EXTRACT(epoch from (startdate.start - s."createdAt")/60))) ELSE 30 END) as time
+  accepteds as (
+    select s."contestantRut", count(*) as accepted
     from submissions2 s, startdate
-    where s."contestantRut" is not null
-    group by s."contestantRut" order by accepted, time
+    where s."contestantRut" is not null and status = 1
+    group by s."contestantRut" order by accepted
+  ),
+  ans as (
+    select accepteds."contestantRut", accepteds.accepted, sum(CASE WHEN s.status = 1 THEN (ROUND(EXTRACT(epoch from (s."createdAt" - startdate.start)/60))) ELSE 30 END) as time
+    from submissions2 s, startdate, accepteds
+    group by accepteds."contestantRut", accepteds.accepted
   )
   select name, ans.* from contestants, ans where contestants.rut = ans."contestantRut";`, { type: QueryTypes.SELECT });
 
@@ -166,14 +246,16 @@ router.get('/ranking/team/:id', async (req, res) => {
     with startdate as ( select start from tournaments where id = ${tournamentId} ),
     questions as ( select "questionId" as question_id from tournament_questions where "tournamentId" = ${tournamentId} ),
     submissions2 as ( select * from submissions where "questionId" in (select question_id from questions) ),
-    ans as (
-        select s."teamId", count(*) as accepted,
-        sum(CASE WHEN s.status = 1 THEN (ROUND(EXTRACT(epoch from (startdate.start - s."createdAt")/60))) ELSE 30 END) as time
+    accepteds as (
+        select s."teamId", count(*) as accepted
         from submissions2 s, startdate
-        where s."teamId" is not null
-        group by s."teamId" order by accepted, time
-    )
-    select name, ans.* from teams, ans where teams.id = ans."teamId";`, { type: QueryTypes.SELECT });
+        where s."teamId" is not null and status = 1
+        group by s."teamId" order by accepted
+    ), ans as (
+      select accepteds."teamId", accepteds.accepted, sum(CASE WHEN s.status = 1 THEN (ROUND(EXTRACT(epoch from (s."createdAt" - startdate.start)/60))) ELSE 30 END) as time
+      from submissions2 s, startdate, accepteds
+      group by accepteds."teamId", accepteds.accepted
+  ) select name, ans.* from teams, ans where teams.id = ans."teamId";`, { type: QueryTypes.SELECT });
 
   res.json({
     status: 1,
