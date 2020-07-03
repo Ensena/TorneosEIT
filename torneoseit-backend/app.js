@@ -8,7 +8,6 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/user');
 var progCompRouter = require('./routes/progcomp');
 var teamRouter = require('./routes/team');
-var tournamentRouter = require('./routes/tournament');
 
 var app = express();
 
@@ -27,7 +26,6 @@ app.use('/', indexRouter);
 app.use('/user', usersRouter);
 app.use('/progcomp', progCompRouter);
 app.use('/team', teamRouter);
-app.use('/tournament', tournamentRouter);
 
 
 // catch 404 and forward to error handler
