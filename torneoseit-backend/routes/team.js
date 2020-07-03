@@ -4,14 +4,47 @@ const models = require('../models');
 const contestant = require('../models/contestant');
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+router.get('/:rut', (req, res, next) => {
+  const {rut} = req.params;
+  if(rut) {
+    models.contestant.findOne({
+      where: {
+        rut: rut
+      },
+      include: {
+        model: models.team, as: "teams",
+        include: {
+          model: models.contestant, as: "members"
+        }
+      }
+    }).then(teams => {
+      if(teams){
+        res.json({
+          status: 1,
+          statusCode: 'team/found',
+          data: teams.toJSON()
+        });
+      } else {
+        res.status(400).json({
+          status: 0,
+          statusCode: 'team/not-found',
+          description: "Couldn't find the teams or the user"
+        });
+      }
+    })
+  } else {
+    res.status(400).json({
+      status: 0,
+      statusCode: 'team/wrong-body',
+      description: 'The body is wrong! :('
+    });
+  }
 });
 
 router.post('/add', (req, res, next) => {
-    rut = req.body['rut'];
-    name = req.body['name'];
-    teamId = req.body['team_id'];
+    const rut = req.body['rut'];
+    const name = req.body['name'];
+    const teamId = req.body['team_id'];
     if(rut){
         models.contestant.findOne({
             where: {
@@ -59,11 +92,11 @@ router.post('/add', (req, res, next) => {
             });
         });
     } else {
-        res.status(400).json({
-            status: 0,
-            statusCode: 'team/add/wrong-body',
-            description: 'The body is wrong! :('
-        });
+      res.status(400).json({
+          status: 0,
+          statusCode: 'team/add/wrong-body',
+          description: 'The body is wrong! :('
+      });
     }
 })
 
@@ -151,7 +184,46 @@ router.post('/', (req, res, next) => {
             description: 'The body is wrong! :('
           });
     }
-    
+});
+
+router.delete('/delete', (req, res, next) => {
+  const userId = req.body['rut_usuario'];
+  const teamId = req.body['team_id'];
+  
+  if(userId && teamId){
+    models.team.findOne({
+      where: {
+        id: teamId
+      }
+    }).then( team => {
+      if(team){
+        team.removeMember(userId);
+        res.json({
+          status: 1,
+          statusCode: 'user/delete-found',
+          description: "user removed successfully from the team"
+        });
+      } else {
+        res.status(400).json({
+          status: 0,
+          statusCode: 'team/not-found',
+          description: "Couldn't find the team"
+        });
+      }
+    }).catch(error => {
+      res.status(400).json({
+        status: 0,
+        statusCode: 'database/error',
+        description: error.toString()
+      });
+    });
+  } else {
+    res.status(400).json({
+      status: 0,
+      statusCode: 'team/wrong-body',
+      description: 'The body is wrong! :('
+    });
+  }
 });
 
 module.exports = router;

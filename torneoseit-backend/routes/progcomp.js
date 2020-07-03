@@ -1,6 +1,7 @@
 var express = require('express');
 const models = require('../models');
 const multer = require('multer');
+const fetch = require('node-fetch');
 const { sequelize, Sequelize } = require('../models');
 const { QueryTypes } = require('sequelize');
 const { Op } = Sequelize.Op;
@@ -36,6 +37,82 @@ const createUserIfNotExist = (rut, name) => {
     }
   });
 }
+
+router.get('/submissions', (req, res, next) => {
+  const rut = req.body['rut'];
+  if(rut){
+    
+    models.submission.findAll({
+      where: {
+        
+      }
+    })
+  } else {
+
+  }
+});
+
+router.put('/submissions/update', (req, res, next) => {
+  var submissionId = parseInt(req.body['submission_id']);
+  if(submissionId){
+    urlSubmissionId = submissionId-1;
+    const URL = 'https://uhunt.onlinejudge.org/api/subs-user/1151134/' + urlSubmissionId;
+    console.log("El sub id: ",submissionId)
+    console.log(" URL: ", URL)
+    fetch(URL)
+    .then(res => res.json())
+    .then((data) => {
+      const match = data.subs.filter(inner => inner[0] === submissionId)[0];
+      console.log("match", match);
+      var status;
+      if(match[2] === 90){
+        status = 1;
+      } else if(match[2] === 50){
+        status = 3;
+      } else if(match[2] === 30){
+        status = 4;
+      } else if(match[2] === 20){
+        status = 0;
+      } else {
+        status = 2;
+      }
+      console.log("status", status);
+
+      models.submission.update({status: status}, {
+        where: {
+          id: submissionId
+        }
+      }).then(updated => {
+        if (updated) {
+          res.json({
+            status: 1,
+            statusCode: 'status/update-found',
+            data: {submissionId, status}
+          });
+        } else {
+          res.json({
+            status: 0,
+            statusCode: 'status/update-not-found',
+            description: 'submission id not found'
+          });
+        }
+      });
+    }).catch(error => {
+      res.status(400).json({
+        status: 0,
+        statusCode: 'database/error',
+        description: error.toString()
+      });
+    })
+  } else {
+    res.status(400).json({
+      status: 0,
+      statusCode: 'tournament/wrong-parameter',
+      description: 'The parameters are wrong! :('
+    });
+  }
+  
+});
 
 router.get('/', function(req, res, next) {
   res.send('respond with a resource');
@@ -288,7 +365,7 @@ router.post('/submit', upload.single('file'), (req, res, next) => {
               res.status(400).json({
                 status: 0,
                 statusCode: 'database/error',
-                description: error.toString()
+                description: err.toString()
               });
             });
           }
@@ -300,7 +377,7 @@ router.post('/submit', upload.single('file'), (req, res, next) => {
           description: "Question does not exist"
         });
       }
-    }).catch(err => {
+    }).catch(error => {
       res.status(400).json({
         status: 0,
         statusCode: 'database/error',

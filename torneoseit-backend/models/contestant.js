@@ -17,10 +17,11 @@ module.exports = (sequelize, DataTypes) => {
     }
   });
 
-  // contestant.associate = (models) => {
-  //   contestant.hasMany(models.submission, {
-  //     foreignKey: 'contestant_rut'
-  //   });
-  // };
+  contestant.associate = (models) => {
+    contestant.belongsToMany(models.team, {
+      through: 'contestant_teams',
+      as: 'teams',
+    });
+  };
   return contestant;
 };
