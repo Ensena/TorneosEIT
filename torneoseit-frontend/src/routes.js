@@ -23,6 +23,14 @@ const MisEquiposProgra = React.lazy(() =>
   import('./pages/torneos_progra/mis_equipos')
 );
 
+const CrearTorneoProgra = React.lazy(() =>
+  import('./pages/torneos_progra/crear_torneo')
+);
+
+const VerTorneoProgra = React.lazy(() =>
+  import('./pages/torneos_progra/ver_torneo')
+);
+
 export const TorneosPrograRoutes = () => {
   const path = '/programacion';
   return (
@@ -44,13 +52,19 @@ export const TorneosPrograRoutes = () => {
           <Route exact path={`${path}/mis-equipos`}>
             <MisEquiposProgra />
           </Route>
+
+          <Route exact path={`${path}/crear-torneo`}>
+            <CrearTorneoProgra />
+          </Route>
+
+          <Route exact path={`${path}/ver-torneo/:id`}>
+            <VerTorneoProgra />
+          </Route>
         </Suspense>
       </Switch>
     </Router>
   );
 };
-
-console.log('asdasdasd');
 
 const DisponiblesLudico = React.lazy(() =>
   import('./pages/torneos_ludicos/displonibles')
