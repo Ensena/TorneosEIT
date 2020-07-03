@@ -28,14 +28,18 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true
     },
     category: {
-        type: DataTypes.STRING,
-        allowNull: true
+        type: DataTypes.INTEGER,
+        allowNull: false
     }
   });
 
   tournament.associate = (models) => {
     tournament.belongsToMany(models.team, {
       through: 'tournament_teams'
+    });
+    tournament.belongsToMany(models.question, {
+      through: 'tournament_questions',
+      as: 'questions'
     });
     tournament.belongsToMany(models.contestant, {
       through: 'tournament_contestants'
