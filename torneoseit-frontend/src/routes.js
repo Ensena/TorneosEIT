@@ -15,6 +15,26 @@ const RankingProgra = React.lazy(() =>
   import('./pages/torneos_progra/ranking')
 );
 
+const MisEnviosProgra = React.lazy(() =>
+  import('./pages/torneos_progra/mis_envios')
+);
+
+const MisEquiposProgra = React.lazy(() =>
+  import('./pages/torneos_progra/mis_equipos')
+);
+
+const CrearTorneoProgra = React.lazy(() =>
+  import('./pages/torneos_progra/crear_torneo')
+);
+
+const VerTorneoProgra = React.lazy(() =>
+  import('./pages/torneos_progra/ver_torneo')
+);
+
+const SubirSolucionProgra = React.lazy(() =>
+  import('./pages/torneos_progra/subir_solucion')
+);
+
 export const TorneosPrograRoutes = () => {
   const path = '/programacion';
   return (
@@ -28,13 +48,31 @@ export const TorneosPrograRoutes = () => {
           <Route exact path={`${path}/ranking`}>
             <RankingProgra />
           </Route>
+
+          <Route exact path={`${path}/mis-envios`}>
+            <MisEnviosProgra />
+          </Route>
+
+          <Route exact path={`${path}/mis-equipos`}>
+            <MisEquiposProgra />
+          </Route>
+
+          <Route exact path={`${path}/crear-torneo`}>
+            <CrearTorneoProgra />
+          </Route>
+
+          <Route exact path={`${path}/ver-torneo/:id`}>
+            <VerTorneoProgra />
+          </Route>
+
+          <Route exact path={`${path}/subir-solucion`}>
+            <SubirSolucionProgra />
+          </Route>
         </Suspense>
       </Switch>
     </Router>
   );
 };
-
-console.log('asdasdasd');
 
 const DisponiblesLudico = React.lazy(() =>
   import('./pages/torneos_ludicos/displonibles')

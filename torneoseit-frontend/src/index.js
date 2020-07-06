@@ -3,23 +3,21 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
-import ensena from 'ensena'
+import ConfigProvider from './contexts/config';
+import ensena from 'ensena';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-ensena.SetApp("bymSQsg2Gm")
-ensena.SetWebUser().then(async ()=>{
-  console.log(ensena);
-  console.log(ensena.Ctx());
-  console.log(ensena.Ctx().User);
-  console.log(ensena.User());
-  
+ensena.SetApp('bymSQsg2Gm');
+ensena.SetWebUser().then(async () => {
   ReactDOM.render(
     <React.StrictMode>
-      <App />
+      <ConfigProvider>
+        <App />
+      </ConfigProvider>
     </React.StrictMode>,
     document.getElementById('root')
   );
-})
+});
 // ReactDOM.render(
 //   <React.StrictMode>
 //     <App />
