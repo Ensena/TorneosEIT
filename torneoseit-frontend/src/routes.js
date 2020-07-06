@@ -31,6 +31,10 @@ const VerTorneoProgra = React.lazy(() =>
   import('./pages/torneos_progra/ver_torneo')
 );
 
+const SubirSolucionProgra = React.lazy(() =>
+  import('./pages/torneos_progra/subir_solucion')
+);
+
 export const TorneosPrograRoutes = () => {
   const path = '/programacion';
   return (
@@ -59,6 +63,10 @@ export const TorneosPrograRoutes = () => {
 
           <Route exact path={`${path}/ver-torneo/:id`}>
             <VerTorneoProgra />
+          </Route>
+
+          <Route exact path={`${path}/subir-solucion`}>
+            <SubirSolucionProgra />
           </Route>
         </Suspense>
       </Switch>

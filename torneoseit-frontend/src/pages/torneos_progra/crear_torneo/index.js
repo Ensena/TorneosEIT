@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   Container,
   Button,
@@ -12,30 +12,45 @@ import {
   Label,
 } from 'reactstrap';
 import DatePicker from 'react-datepicker';
+import { ConfigContext } from '../../../contexts/config';
+import { url } from '../../../helpers';
 
 export default () => {
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
+  const context = useContext(ConfigContext);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
   const [preguntas, setPreguntas] = useState([0]);
+  console.log(process.env.BACKEND_URL);
+
   const handleSubmit = (e) => {
+    var auxUrl = url + 'progcomp/create/tournament';
+    var request = new XMLHttpRequest();
+    request.open('POST', auxUrl, true);
+    request.send(new FormData(e.target));
+    window.location = '/programacion/torneos' + context.token;
     e.preventDefault();
-    console.log(e);
   };
+
   return (
     <Container fluid>
-      <Row>
-        <Col style={{ textAlign: 'center' }}>
-          <h3>Crear torneo</h3>
-        </Col>
-      </Row>
-      <Row>
-        <Col xs={{ size: '6', offset: 3 }}>
-          <Form onSubmit={handleSubmit}>
+      <Form
+        action="http://localhost:5000/progcomp/create/tournament"
+        method="post"
+        encType="multipart/form-data"
+        onSubmit={handleSubmit}
+      >
+        <Row>
+          <Col style={{ textAlign: 'center' }}>
+            <h3>Crear torneo</h3>
+          </Col>
+        </Row>
+        <Row>
+          <Col xs={{ size: '6', offset: 3 }}>
             <FormGroup>
               <Label for="exampleCustomSelect">Nombre del torneo</Label>
               <Input
                 type="input"
-                id="exampleCustomSelect"
+                id="id_torneo_name"
                 name="name"
                 required
               ></Input>
@@ -45,8 +60,10 @@ export default () => {
                 Fecha de inicio
               </Label>
               <DatePicker
+                name="start"
                 selected={startDate}
                 onChange={(date) => setStartDate(date)}
+                required
               />
             </FormGroup>
             <FormGroup>
@@ -54,33 +71,34 @@ export default () => {
                 Fecha de término
               </Label>
               <DatePicker
+                name="end"
                 selected={endDate}
                 onChange={(date) => setEndDate(date)}
+                required
               />
             </FormGroup>
+            <Input hidden name="type" value="0"></Input>
             <FormGroup>
-              <Label for="exampleCustomSelect">Premios</Label>
+              <Label>Premios</Label>
               <Input
                 type="textarea"
-                id="exampleCustomSelect"
-                name="premios"
+                id="id_torneo_premios"
+                name="prices"
                 required
               ></Input>
             </FormGroup>
             <FormGroup>
-              <Label for="exampleCustomMutlipleSelect">Categoría</Label>
+              <Label>Categoría</Label>
               <CustomInput
                 type="select"
-                id="exampleCustomMutlipleSelect"
-                name="categoria"
+                id="id_torneo_categoria"
+                name="category"
                 required
               >
-                <option value="">Select</option>
-                <option>Value 1</option>
-                <option>Value 2</option>
-                <option>Value 3</option>
-                <option>Value 4</option>
-                <option>Value 5</option>
+                <option value="">Seleccionar categoria</option>
+                <option value="1">Principiante</option>
+                <option value="2">Intermedio</option>
+                <option value="3">Avanzado</option>
               </CustomInput>
             </FormGroup>
 
@@ -106,46 +124,41 @@ export default () => {
                   )}
                 </div>
                 <FormGroup>
-                  <Label for="exampleCustomSelect">Nombre</Label>
+                  <Label>Nombre</Label>
                   <Input
                     type="input"
-                    id="exampleCustomSelect"
-                    name={`pregunta_${index + 1}_nombre`}
+                    id={`id_pregunta_${index + 1}_nombre`}
+                    name={`questions[${index}][name]`}
                     required
                   ></Input>
                 </FormGroup>
                 <FormGroup>
-                  <Label for="exampleCustomSelect">ID</Label>
+                  <Label>ID</Label>
                   <Input
                     type="input"
-                    id="exampleCustomSelect"
-                    name={`pregunta_${index + 1}_id`}
+                    id={`id_pregunta_${index + 1}_id`}
+                    name={`questions[${index}][id]`}
                     required
                   ></Input>
                 </FormGroup>
                 <FormGroup>
-                  <Label for="exampleCustomMutlipleSelect">Judge</Label>
+                  <Label>Judge</Label>
                   <CustomInput
                     type="select"
-                    id="exampleCustomMutlipleSelect"
-                    name={`pregunta_${index + 1}_judge`}
+                    id={`id_pregunta_${index + 1}_judge`}
+                    name={`questions[${index}][judge]`}
                     required
                   >
-                    <option value="">Select</option>
-                    <option>Value 1</option>
-                    <option>Value 2</option>
-                    <option>Value 3</option>
-                    <option>Value 4</option>
-                    <option>Value 5</option>
+                    <option value="">Seleccionar un Judge</option>
+                    <option value="https://onlinejudge.org/">UVA Judge</option>
                   </CustomInput>
                 </FormGroup>
                 <FormGroup>
-                  <Label for="exampleCustomMutlipleSelect">
-                    PDF de la pregunta
-                  </Label>
+                  <Label>PDF de la pregunta</Label>
                   <CustomInput
                     type="file"
-                    name={`pregunta_${index + 1}_pdf`}
+                    id={`id_pregunta_${index + 1}_pdf`}
+                    name={`files`}
                     accept=".pdf"
                     required
                   ></CustomInput>
@@ -160,14 +173,14 @@ export default () => {
                 </Button>
               </div>
             ))}
-          </Form>
-        </Col>
-        <Col xs={{ size: '6', offset: 3 }}>
-          <Button style={{ float: 'right' }} type="submit" color="success">
-            Enviar
-          </Button>
-        </Col>
-      </Row>
+          </Col>
+          <Col xs={{ size: '6', offset: 3 }}>
+            <Button style={{ float: 'right' }} type="submit" color="success">
+              Enviar
+            </Button>
+          </Col>
+        </Row>
+      </Form>
     </Container>
   );
 };

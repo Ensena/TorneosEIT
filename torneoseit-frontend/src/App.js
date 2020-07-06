@@ -6,7 +6,7 @@ import {
   Redirect,
 } from 'react-router-dom';
 import './App.css';
-import { LoadingFallback } from './helpers';
+import { LoadingFallback, url } from './helpers';
 import { ConfigContext } from './contexts/config';
 import ensena from 'ensena';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -28,8 +28,30 @@ const TorneosLudicosRoutes = React.lazy(() =>
 
 export default () => {
   const context = useContext(ConfigContext);
+  const user = ensena.User();
+  if (!context.user) {
+    context.setUser(true);
+    fetch(url + 'user/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: `${user.Name} ${user.LastName}`,
+        rut: user.ID,
+        power: true,
+      }),
+    });
+  }
   if (window.location.search) {
-    context.setToken(window.location.search);
+    const search = window.location.search.substring(1);
+    const json = JSON.parse(
+      '{"' + search.replace(/&/g, '","').replace(/=/g, '":"') + '"}',
+      function (key, value) {
+        return key === '' ? value : decodeURIComponent(value);
+      }
+    );
+    context.setToken(`?TOKEN=${json.TOKEN}`);
   }
   return (
     <div className="main-container">

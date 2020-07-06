@@ -14,6 +14,8 @@ code {
 
 .ranking-top-navbar {
   display: flex;
+  align-items: center;
+  justify-content: space-evenly;
 }
 
 .ranking-top-navbar * {

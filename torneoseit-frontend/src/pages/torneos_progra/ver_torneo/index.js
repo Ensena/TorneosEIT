@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect, useContext } from 'react';
+import { ConfigContext } from '../../../contexts/config';
 import {
   Container,
   Button,
@@ -13,84 +13,116 @@ import {
   Label,
 } from 'reactstrap';
 import DatePicker from 'react-datepicker';
+import { url } from '../../../helpers';
 
 export default () => {
+  const context = useContext(ConfigContext);
+  const [tournament, setTournament] = useState(null);
   const id = window.location.href
     .split('/')
     .pop()
     .substr(0, window.location.href.split('/').pop().indexOf('?'));
 
+  useEffect(() => {
+    fetch(url + `progcomp/${id}`)
+      .then((res) => res.json())
+      .then((res) => {
+        setTournament(res.data);
+      });
+  }, []);
+
   return (
-    <Container fluid>
-      <Row>
-        <Col style={{ textAlign: 'center', marginBottom: 20 }}>
-          <h3>Torneo {id}</h3>
-        </Col>
-      </Row>
-      <Row>
-        <Col xs={{ size: '6', offset: 3 }}></Col>
-        <Col xs={{ size: '6', offset: 3 }}>
-          <div className="mis-envios">
-            <Table bordered>
-              <tbody>
-                {new Array(1).fill(null).map((item, index) => (
-                  <>
+    tournament && (
+      <Container fluid>
+        <Row>
+          <Col style={{ textAlign: 'center', marginBottom: 20 }}>
+            <h3>
+              {tournament.id} - Torneo {tournament.name}
+            </h3>
+          </Col>
+        </Row>
+        <Row>
+          <Col xs={{ size: '6', offset: 3 }}></Col>
+          <Col xs={{ size: '6', offset: 3 }}>
+            <div className="mis-envios">
+              <Table bordered>
+                <thead>
+                  <tr>
+                    <th style={{ backgroundColor: 'lightgrey', width: '10%' }}>
+                      ID
+                    </th>
+                    <th
+                      style={{
+                        backgroundColor: 'white',
+                        borderRight: '0px solid white',
+                      }}
+                    >
+                      Nombre del problema
+                    </th>
+                    <th
+                      style={{
+                        backgroundColor: 'white',
+                        width: '10%',
+                        borderLeft: '0px solid white',
+                      }}
+                    ></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tournament.questions.map((item, index) => (
                     <tr>
                       <th
                         style={{ backgroundColor: 'lightgrey', width: '10%' }}
                       >
-                        {index + 2564}
+                        {item.id}
                       </th>
                       <td style={{ borderRight: '0px none white' }}>
-                        Pedrito y el lobo
+                        {item.name}
                       </td>
                       <td
                         style={{ borderLeft: '0px none white', width: '10%' }}
                       >
-                        <i class="fas fa-file-pdf"></i>
+                        <a
+                          href={url + `uploads/${item.file.split('\\').pop()}`}
+                        >
+                          <i class="fas fa-file-pdf"></i>
+                        </a>
                       </td>
                     </tr>
-                    <tr>
-                      <th style={{ backgroundColor: 'lightgrey' }}>
-                        {index + 4532}
-                      </th>
-                      <td style={{ borderRight: '0px none white' }}>
-                        El gato juancho
-                      </td>
-                      <td
-                        style={{ borderLeft: '0px none white', width: '10%' }}
-                      >
-                        <i class="fas fa-file-pdf"></i>
-                      </td>
-                    </tr>
-                    <tr>
-                      <th style={{ backgroundColor: 'lightgrey' }}>
-                        {index + 4526}
-                      </th>
-                      <td style={{ borderRight: '0px none white' }}>
-                        El problema imposible
-                      </td>
-                      <td
-                        style={{ borderLeft: '0px none white', width: '10%' }}
-                      >
-                        <i class="fas fa-file-pdf"></i>
-                      </td>
-                    </tr>
-                  </>
-                ))}
-              </tbody>
-            </Table>
-          </div>
-        </Col>
-      </Row>
-      <Row>
-        <Col xs={{ size: '6', offset: 3 }}>
-          <div className="ver-torneo-buttons-div">
-            <Button color="dark">Ver ranking</Button>
-            <Button color="dark">Subir una solución</Button>
-          </div>
-        </Col>
-      </Row>
-    </Container>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
+          </Col>
+        </Row>
+        <Row>
+          <Col xs={{ size: '6', offset: 3 }}>
+            <div className="ver-torneo-buttons-div">
+              <Button
+                color="dark"
+                onClick={() =>
+                  (window.location =
+                    '/programacion/ranking' + context.token + `&id=${id}`)
+                }
+              >
+                Ver ranking
+              </Button>
+              <Button
+                color="dark"
+                onClick={() =>
+                  (window.location =
+                    '/programacion/subir-solucion' +
+                    context.token +
+                    '&id=' +
+                    id)
+                }
+              >
+                Subir una solución
+              </Button>
+            </div>
+          </Col>
+        </Row>
+      </Container>
+    )
   );
 };
