@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { Row, Col, Button } from 'reactstrap';
+import { ConfigContext } from '../../contexts/config';
 
 export default ({ children }) => {
+  const context = useContext(ConfigContext);
   const history = useHistory();
   const { page } = useParams();
   const buttons = [
@@ -23,7 +25,9 @@ export default ({ children }) => {
             disabled={page === item[1]}
             outline={page !== item[1]}
             className="side-panel-button"
-            onClick={() => (window.location = `/ludico/${item[1]}`)}
+            onClick={() =>
+              (window.location = `/ludico/${item[1]}` + context.token)
+            }
           >
             {item[0]}
           </Button>
@@ -31,7 +35,7 @@ export default ({ children }) => {
         <Button
           outline
           className="side-panel-button-back"
-          onClick={() => history.push('/')}
+          onClick={() => history.push('/' + context.token)}
         >
           Volver al menu de selección
         </Button>
