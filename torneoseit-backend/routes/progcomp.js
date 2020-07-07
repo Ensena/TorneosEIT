@@ -230,21 +230,19 @@ router.get('/ranking/personal/:id', async (req, res) => {
 
   const people = await sequelize.query(
     `
-  with startdate as ( select start from tournaments where id = ${tournamentId} ),
-  questions as ( select "questionId" as question_id from tournament_questions where "tournamentId" = ${tournamentId} ),
-  submissions2 as ( select * from submissions where "questionId" in (select question_id from questions) ),
-  accepteds as (
-    select s."contestantRut", count(*) as accepted
-    from submissions2 s, startdate
-    where s."contestantRut" is not null and status = 1
-    group by s."contestantRut" order by accepted
-  ),
-  ans as (
-    select accepteds."contestantRut", accepteds.accepted, sum(CASE WHEN s.status = 1 THEN (ROUND(EXTRACT(epoch from (s."createdAt" - startdate.start)/60))) ELSE 30 END) as time
-    from submissions2 s, startdate, accepteds
-    group by accepteds."contestantRut", accepteds.accepted
-  )
-  select name, ans.* from contestants, ans where contestants.rut = ans."contestantRut";`,
+    with startdate as ( select start from tournaments where id = ${tournamentId} ),
+    questions as ( select "questionId" as question_id from tournament_questions where "tournamentId" = ${tournamentId} ),
+    submissions2 as ( select status, "createdAt", "questionId", "contestantRut" from submissions where "questionId" in (select question_id from questions) and status != 1 UNION ALL
+    select status, min("createdAt"), "questionId", "contestantRut" from submissions where "questionId" in (select question_id from questions) and status = 1 group by "contestantRut", "questionId", status),
+    ans as (
+        select "contestantRut",
+        COUNT(*) filter (where s.status = 1) as accepted,
+        sum(CASE WHEN s.status = 1 THEN (ROUND(EXTRACT(epoch from (s."createdAt" - startdate.start)/60))) ELSE 30 END) as time
+        from submissions2 s, startdate
+        group by "contestantRut"
+        order by accepted, time)
+    select name, ans.* from contestants, ans where contestants.rut = ans."contestantRut";
+    `,
     { type: QueryTypes.SELECT }
   );
 
@@ -262,19 +260,19 @@ router.get('/ranking/team/:id', async (req, res) => {
 
   const people = await sequelize.query(
     `
-    with startdate as ( select start from tournaments where id = ${tournamentId} ),
-    questions as ( select "questionId" as question_id from tournament_questions where "tournamentId" = ${tournamentId} ),
-    submissions2 as ( select * from submissions where "questionId" in (select question_id from questions) ),
-    accepteds as (
-        select s."teamId", count(*) as accepted
+    with startdate as ( select start from tournaments where id =  ${tournamentId} ),
+    questions as ( select "questionId" as question_id from tournament_questions where "tournamentId" =  ${tournamentId} ),
+    submissions2 as (select status, "createdAt", "questionId", "teamId" from submissions where "questionId" in (select question_id from questions) and status != 1 UNION ALL
+    select status, min("createdAt"), "questionId", "teamId" from submissions where "questionId" in (select question_id from questions) and status = 1 group by "teamId", "questionId", status),
+    ans as (
+        select "teamId",
+        COUNT(*) filter (where s.status = 1) as accepted,
+        sum(CASE WHEN s.status = 1 THEN (ROUND(EXTRACT(epoch from (s."createdAt" - startdate.start)/60))) ELSE 30 END) as time
         from submissions2 s, startdate
-        where s."teamId" is not null and status = 1
-        group by s."teamId" order by accepted
-    ), ans as (
-      select accepteds."teamId", accepteds.accepted, sum(CASE WHEN s.status = 1 THEN (ROUND(EXTRACT(epoch from (s."createdAt" - startdate.start)/60))) ELSE 30 END) as time
-      from submissions2 s, startdate, accepteds
-      group by accepteds."teamId", accepteds.accepted
-  ) select name, ans.* from teams, ans where teams.id = ans."teamId";`,
+        where "teamId" is not null
+        group by "teamId"
+        order by accepted, time
+    ) select name, ans.* from teams, ans where teams.id = ans."teamId";`,
     { type: QueryTypes.SELECT }
   );
 
@@ -456,8 +454,8 @@ router.post('/submit', upload.single('file'), (req, res, next) => {
             'torneoseit',
             question.judgeid,
             lang,
-            req.file.path,
-            0,
+            code ? code : req.file.path,
+            code ? 1 : 0,
           ]);
 
           pythonProcess.stdout.on('data', (data) => {
@@ -477,10 +475,10 @@ router.post('/submit', upload.single('file'), (req, res, next) => {
           //   });
           // });
 
-          pythonProcess.on('exit', (code) => {
-            console.log('Python process quit with code : ' + code);
+          pythonProcess.on('exit', (pyCode) => {
+            console.log('Python process quit with code : ' + pyCode);
 
-            if (code != 0) {
+            if (pyCode != 0) {
               res.json({
                 status: 0,
                 statusCode: 'progcomp/submit/error',
@@ -493,9 +491,9 @@ router.post('/submit', upload.single('file'), (req, res, next) => {
                   status: submissionStatus,
                   languaje: lang,
                   code: code,
-                  file: req.file.path,
-                  contestantRut: contestantRut,
-                  teamId: teamId,
+                  file: file ? req.file.path : null,
+                  contestantRut: contestantRut && !teamId ? contestantRut : null,
+                  teamId: teamId ? teamId : null,
                   questionId: questionId,
                 })
                 .then((submission) => {

@@ -83,7 +83,7 @@ export default () => {
                         style={{ borderLeft: '0px none white', width: '10%' }}
                       >
                         <a
-                          href={url + `uploads/${item.file.split('\\').pop()}`}
+                          href={url + `uploads/${item.file.split('\/').pop()}`}
                         >
                           <i class="fas fa-file-pdf"></i>
                         </a>

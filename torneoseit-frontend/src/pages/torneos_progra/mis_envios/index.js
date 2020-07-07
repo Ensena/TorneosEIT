@@ -87,7 +87,7 @@ export default () => {
           <tbody>
             {submissions.map((item, index) => (
               <tr>
-                <th style={{ backgroundColor: 'lightgrey' }}>{item.id}</th>
+                <th style={{ backgroundColor: 'lightgrey' }}>{item.questionId}</th>
                 <td style={{ color: status[`${item.status}`].color }}>
                   {status[`${item.status}`].text}
                 </td>
