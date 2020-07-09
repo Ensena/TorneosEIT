@@ -91,4 +91,44 @@
   border-radius: 20px;
   padding: 20px;
   margin: 30px 0px;
+  cursor: pointer;
+}
+
+.ver-torneo-buttons-div {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.mis-equipos-buttons {
+  display: flex;
+  width: 100%;
+  justify-content: space-evenly;
+  align-items: flex-start;
+  height: min-content;
+}
+
+.mis-equipos-buttons form {
+  display: flex !important;
+  align-items: flex-start;
+  border-right: 1px solid black;
+}
+
+.mis-equipos-buttons form * {
+  margin: 0px 16px;
+}
+
+.mis-equipos-buttons form button {
+  width: 230px;
+}
+
+.mis-equipos-buttons .form-group {
+  display: flex !important;
+}
+
+.torneo-search {
+  display: flex;
+}
+
+.torneo-search input {
+  width: fit-content;
 }
